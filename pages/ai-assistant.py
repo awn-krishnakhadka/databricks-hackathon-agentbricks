@@ -10,9 +10,6 @@ from model_serving_utils import (
 from collections import OrderedDict
 from messages import UserMessage, AssistantResponse, render_message
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 # Ensure environment variable is set correctly
 SERVING_ENDPOINT = os.getenv('SERVING_ENDPOINT')
 assert SERVING_ENDPOINT, \
@@ -93,8 +90,8 @@ def reduce_chat_agent_chunks(chunks):
 if "history" not in st.session_state:
     st.session_state.history = []
 
-st.title("🧱 Chatbot App")
-st.write(f"A basic chatbot using your own serving endpoint.")
+st.title("AI Assistant")
+# st.write(f"A basic chatbot using your own serving endpoint.")
 st.write(f"Endpoint name: `{SERVING_ENDPOINT}`")
 
 

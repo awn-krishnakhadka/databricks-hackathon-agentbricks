@@ -1,7 +1,7 @@
 command: [
   "streamlit", 
   "run",
-  "app.py"
+  "home.py"
 ]
 
 env:
@@ -9,3 +9,11 @@ env:
     value: "false"
   - name: "SERVING_ENDPOINT"
     valueFrom: "serving-endpoint"
+  - name: "DATABRICKS_WAREHOUSE_ID"
+    valueFrom: "sql-warehouse"
+  - name: "GENIE_SPACE_ID"
+    valueFrom: "genie-space"
+  - name: "KBKA_SERVING_ENDPOINT"
+    valueFrom: "kbka-serving-endpoint"
+  - name: "STKA_SERVING_ENDPOINT"
+    valueFrom: "stka-serving-endpoint"
