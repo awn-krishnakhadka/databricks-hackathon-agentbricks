@@ -295,12 +295,12 @@ def show_page():
             "Help with home installation for internet and networking equipment.",
             "Maintenance notifications and updates.",
         ],
-        "Device and Equipment Returns": [
+        "Device Returns": [
             "Support for returning devices and accessories within specified timeframes.",
             "Processing of refunds or replacements for defective equipment.",
             "Information on restocking fees and required documentation.",
         ],
-        "Service Interruption Credits": [
+        "Service Interruption": [
             "Compensation for service outages or interruptions, calculated based on outage duration and plan cost.",
             "Automatic credits for widespread outages; manual requests for individual issues.",
             "Guidance on eligibility and how to request credits.",
@@ -309,7 +309,7 @@ def show_page():
             "Formal review and appeal processes for denied refund or credit requests.",
             "Assistance with submitting dispute forms and escalation to resolution departments.",
         ],
-        "Account Management and Customer Communications": [
+        "Account Management": [
             "Account access and management via website, mobile app, phone, and retail locations.",
             "Notifications about service status, outages, maintenance, and policy changes.",
             "Customizable communication preferences.",
