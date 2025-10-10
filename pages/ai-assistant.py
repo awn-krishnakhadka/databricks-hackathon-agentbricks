@@ -39,18 +39,6 @@ def is_live_agent_request(user_input):
         if keyword in input_lower:
             return True
     
-    # Also check for patterns like "I need to talk to..." or "Can I speak with..."
-    patterns = [
-        r"i (?:need|want) to (?:talk|speak) (?:to|with) (?:a )?(?:human|person|someone|agent|advisor)",
-        r"can i (?:talk|speak) (?:to|with) (?:a )?(?:human|person|someone|agent|advisor)",
-        r"connect me (?:to|with) (?:a )?(?:human|person|agent|advisor)",
-        r"transfer (?:me )?(?:to|with) (?:a )?(?:human|person|agent|advisor)",
-    ]
-    
-    for pattern in patterns:
-        if re.search(pattern, input_lower):
-            return True
-    
     return False
 
 def show_live_agent_modal():
@@ -85,7 +73,7 @@ def show_live_agent_modal():
     st.markdown("""
     <div class="live-agent-header">
         <h2>🧑‍💼 Live Support Agent - Sarah</h2>
-        <p>Connected to human support representative</p>
+        <p>You're now chatting with a real person who's here to help!</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -266,25 +254,7 @@ def generate_live_agent_response(user_message):
             "Good day! I'm here to help resolve any issues you might be experiencing. What's going on?"
         ]
         return random.choice(responses)
-    
-    # Gratitude responses
-    elif any(word in message_lower for word in ["thank", "thanks", "appreciate","resolved"]):
-        responses = [
-            "You're very welcome! Is there anything else I can assist you with today?",
-            "Happy to help! Please don't hesitate to reach out if you need anything else.",
-            "My pleasure! Let me know if you have any other questions or concerns."
-        ]
-        return random.choice(responses)
-    
-    # Problem/issue responses
-    elif any(word in message_lower for word in ["problem", "issue", "trouble", "error", "broken", "not working"]):
-        responses = [
-            "I'm sorry to hear you're experiencing difficulties. Let me help you resolve this. Can you describe exactly what's happening when you encounter this issue?",
-            "I understand this must be frustrating. To better assist you, could you please provide more specific details about the problem?",
-            "Let me look into this for you right away. Can you walk me through the steps you took when this issue occurred?"
-        ]
-        return random.choice(responses)
-    
+
     # Account-related responses
     elif any(word in message_lower for word in ["account", "login", "password", "username", "sign in"]):
         responses = [
@@ -296,19 +266,30 @@ def generate_live_agent_response(user_message):
     
     # Billing responses
     elif any(word in message_lower for word in ["billing", "payment", "charge", "invoice"]):
+        # Find which word was matched for more personalized response
+        matched_word = next((word for word in ["billing", "payment", "charge", "invoice"] if word in message_lower), "billing")
         responses = [
-            "I can assist with billing inquiries. Let me pull up your account information. Can you please confirm your account email address?",
-            "I understand you have questions about billing. I'll be happy to review your account details. What's your account email?",
-            "Billing questions are something I can help with right away. For security, I'll need to verify your account email address first."
+            f"I can assist with {matched_word} inquiries. Let me pull up your account information. Can you please confirm your account email address?",
+            f"I understand you have questions about {matched_word}. I'll be happy to review your account details. What's your account email?",
+            f"{matched_word.capitalize()} questions are something I can help with right away. For security, I'll need to verify your account email address first."
+        ]
+        return random.choice(responses)
+    
+        # Problem/issue responses
+    elif any(word in message_lower for word in ["broken", "not working"]):
+        responses = [
+            "I'm sorry to hear you're experiencing difficulties. Let me help you resolve this. Can you describe exactly what's happening when you encounter this issue?",
+            "I understand this must be frustrating. To better assist you, could you please provide more specific details about the problem?",
+            "Let me look into this for you right away. Can you walk me through the steps you took when this issue occurred?"
         ]
         return random.choice(responses)
     
     # Refund/cancellation responses  
     elif any(word in message_lower for word in ["refund", "cancel", "return", "money back"]):
         responses = [
-            "I understand you'd like to discuss a refund or cancellation. I'll be happy to help you with that process. Can you tell me more about your specific situation?",
-            "Let me help you with your refund request. To get started, could you provide more details about what you'd like to cancel or return?",
-            "I can assist with refunds and cancellations. What specifically would you like to cancel, and can you tell me when you made the original purchase?"
+            "I'm so sorry that we didn't meet your expectations. Let me see what I can do to make this right for you, including a one-time goodwill credit if appropriate. Can you tell me more about your specific situation?",
+            "I sincerely apologize that you're not satisfied with your experience. I'd be happy to process a refund or offer a goodwill gesture to resolve this. What exactly happened that led to this request?",
+            "I'm truly sorry we fell short of your expectations. Let me help make this right immediately - whether that's a full refund, partial credit, or other compensation. Can you walk me through what went wrong?"
         ]
         return random.choice(responses)
     
@@ -318,6 +299,14 @@ def generate_live_agent_response(user_message):
             "I can help with technical issues. Let me connect you with our tech support team or try to resolve this myself. What device and browser are you using?",
             "Technical problems can usually be resolved quickly. Can you describe the specific behavior you're seeing and what device you're using?",
             "I'm here to help with technical difficulties. What exactly is happening, and have you tried refreshing the page or restarting the app?"
+        ]
+        return random.choice(responses)
+    
+    # Gratitude responses
+    elif any(word in message_lower for word in ["thank", "thanks", "appreciate","resolved"]):
+        responses = [
+            "Happy to help! It was my pleasure assisting you today. When you're ready to wrap up, please use the 'End Chat' button to provide quick feedback - it really helps us improve our service. Please don't hesitate to reach out if you need anything else.",
+            "My pleasure! I'm thrilled we could get this sorted out for you. Before you go, feel free to hit 'End Chat' and share your experience in our quick feedback survey. Let me know if you have any other questions or concerns."
         ]
         return random.choice(responses)
     
