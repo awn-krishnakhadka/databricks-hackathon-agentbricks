@@ -121,7 +121,6 @@ def show_page():
         st.error(f"❌ Failed to fetch tickets: {e}")
         st.stop()
 
-    # --- Metrics Cards with gradient colors ---
     total_tickets = len(tickets)
     resolved_tickets = len(tickets[tickets['Status'].str.lower() == 'resolved'])
     closed_tickets = len(tickets[tickets['Status'].str.lower() == 'closed'])
@@ -132,19 +131,16 @@ def show_page():
     try:
         df = load_summary_growth().iloc[0]
 
-        # Extract values
         total_tickets = int(df["total_tickets_all_time"])
         resolved = int(df["resolved_all_time"])
         closed = int(df["closed_all_time"])
         open_tickets = int(df["open_all_time"])
 
-        # Last month values
         last_month_tickets = int(df["tickets_last_month"])
         last_month_resolved = int(df["resolved_last_month"])
         last_month_closed = int(df["closed_last_month"])
         last_month_open = int(df["open_last_month"])
 
-        # Compute growth vs previous total
         def pct_growth(curr_month, total_all):
             prev_total = total_all - curr_month
             if prev_total <= 0:
@@ -162,14 +158,11 @@ def show_page():
         delta_tickets = delta_resolved = delta_closed = delta_open = 0
 
 
-    # --- Helper for delta HTML ---
     def delta_html(value):
         symbol = "▲" if value > 0 else ("▼" if value < 0 else "—")
         css_class = "delta-positive" if value > 0 else ("delta-negative" if value < 0 else "")
         return f"<span class='metric-delta {css_class}'>{symbol} {abs(value)}%</span>"
 
-
-    # --- Metric cards ---
     col1, col2, col3, col4 = st.columns(4)
 
     col1.markdown(
@@ -220,7 +213,6 @@ def show_page():
         unsafe_allow_html=True
     )
 
-    # --- Multi-color Progress Bar ---
     st.markdown("##### 🎯 Ticket Resolution Progress")
 
     closed_ratio = closed_tickets / total_tickets if total_tickets else 0
@@ -269,7 +261,6 @@ def show_page():
     ]
     st.markdown(f"Showing **{len(filtered)} tickets** after filtering.")
 
-    # st.subheader("Visual Insights")
     grid_col1, grid_col2 = st.columns(2)
     with grid_col1:
         fig1 = px.pie(
@@ -318,31 +309,30 @@ def show_page():
 
     st.divider()
 
-    # --- AI Genie Chat in a card ---
-    st.subheader("💬 Ask Genie")
-    space_id = os.getenv("GENIE_SPACE_ID")
-    w = WorkspaceClient()
+    # st.subheader("💬 Ask Genie")
+    # space_id = os.getenv("GENIE_SPACE_ID")
+    # w = WorkspaceClient()
 
-    if "genie_response" not in st.session_state:
-        st.session_state.genie_response = []
+    # if "genie_response" not in st.session_state:
+    #     st.session_state.genie_response = []
 
-    with st.container():
-        user_query = st.text_input("Ask Genie something about tickets or products:")
+    # with st.container():
+    #     user_query = st.text_input("Ask Genie something about tickets or products:")
 
-        if st.button("Send to Genie"):
-            if user_query.strip() != "":
-                try:
-                    response = w.genie.start_conversation_and_wait(space_id=space_id, content=user_query)
-                    messages = [att.text.content for att in response.attachments if hasattr(att.text, "content")]
-                    if messages:
-                        st.session_state.genie_response.append({"query": user_query, "responses": messages})
-                    else:
-                        st.warning("Genie did not return any text response.")
-                except Exception as e:
-                    st.error(f"Failed to connect to Genie: {e}")
+    #     if st.button("Send to Genie"):
+    #         if user_query.strip() != "":
+    #             try:
+    #                 response = w.genie.start_conversation_and_wait(space_id=space_id, content=user_query)
+    #                 messages = [att.text.content for att in response.attachments if hasattr(att.text, "content")]
+    #                 if messages:
+    #                     st.session_state.genie_response.append({"query": user_query, "responses": messages})
+    #                 else:
+    #                     st.warning("Genie did not return any text response.")
+    #             except Exception as e:
+    #                 st.error(f"Failed to connect to Genie: {e}")
 
-        for conv in st.session_state.genie_response:
-            st.markdown(f"**You:** {conv['query']}")
-            for msg in conv['responses']:
-                st.markdown(f"**Genie:** {msg}")
-        st.markdown('</div>', unsafe_allow_html=True)
+    #     for conv in st.session_state.genie_response:
+    #         st.markdown(f"**You:** {conv['query']}")
+    #         for msg in conv['responses']:
+    #             st.markdown(f"**Genie:** {msg}")
+    #     st.markdown('</div>', unsafe_allow_html=True)

@@ -171,9 +171,9 @@ if selected_page == "Home":
         <p>Your unified hub for intelligent support insights & automation</p>
     </div>
     """, unsafe_allow_html=True)
-
-    st.markdown("""
-    Welcome to **AI Support Assistant**, your unified platform for support analytics and intelligent chat.
+    email = st.context.headers.get('X-Forwarded-Email', '')
+    st.markdown(f"""
+    Hi {email}, Welcome to **AI Support Assistant**, your unified platform for support analytics and intelligent chat.
 
     This tool helps your company:
     - 💬 Chat with an AI agent trained on company policies, guides, and FAQs  

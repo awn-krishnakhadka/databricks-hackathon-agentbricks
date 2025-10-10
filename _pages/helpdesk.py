@@ -11,8 +11,6 @@ from collections import OrderedDict
 from messages import UserMessage, AssistantResponse, render_message
 
 def show_page():
-
-    # Ensure environment variable is set correctly
     SERVING_ENDPOINT = os.getenv('SERVING_ENDPOINT')
     assert SERVING_ENDPOINT, \
         ("Unable to determine serving endpoint to use for chatbot app. If developing locally, "
@@ -27,15 +25,12 @@ def show_page():
         """
         Check if user input contains keywords indicating they want to connect to a live agent/advisor.
         """
-        # Convert to lowercase for case-insensitive matching
         input_lower = user_input.lower()
         
-        # Keywords that indicate user wants to talk to a human
         live_agent_keywords = [
             "connect to live agent", "transfer to live agent", "escalate my case"
         ]
         
-        # Check if any of the keywords appear in the user input
         for keyword in live_agent_keywords:
             if keyword in input_lower:
                 return True
@@ -43,55 +38,62 @@ def show_page():
         return False
 
     def show_live_agent_modal():
-        """
-        Show a modal dialog for live agent connection.
-        """
-        # Add custom CSS for live agent interface
         st.markdown("""
         <style>
+        /* Live Agent Header */
         .live-agent-header {
-            background: linear-gradient(90deg, #28a745, #20c997);
+            background: linear-gradient(#e66465, #9198e5);
             color: white;
-            padding: 1rem;
-            border-radius: 10px;
+            padding: 1.2rem 1rem;
+            border-radius: 12px;
             text-align: center;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 1.2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-family: 'Segoe UI', sans-serif;
         }
+        .live-agent-header h2 {
+            margin: 0;
+            font-size: 1.6rem;
+        }
+        .live-agent-header p {
+            margin: 0.2rem 0 0 0;
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* Agent Status Indicator */
         .live-agent-status {
             background-color: #e8f5e8;
             color: #28a745;
-            padding: 0.5rem;
-            border-radius: 5px;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
             text-align: center;
             margin-bottom: 1rem;
-            border-left: 4px solid #28a745;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+        .live-agent-status:hover {
+            background-color: #d1f2d1;
         }
         </style>
         """, unsafe_allow_html=True)
-        
-        # Header for live agent interface
         st.markdown("""
         <div class="live-agent-header">
             <h2>🧑‍💼 Live Support Agent - Sarah</h2>
-            <p>You're now chatting with a real person who's here to help!</p>
+            <p>You're now chatting with a support person who's here to help!</p>
         </div>
         """, unsafe_allow_html=True)
-        
-        # Status indicator
         st.markdown("""
         <div class="live-agent-status">
             🟢 <strong>Agent Online</strong> - Average response time: 1-2 minutes
         </div>
         """, unsafe_allow_html=True)
-        
-        # Initialize live agent chat history if not exists
         if "live_agent_history" not in st.session_state:
             st.session_state.live_agent_history = [
                 {"role": "agent", "content": "Hello! I'm Sarah, your live support agent. How may I help you today?"}
             ]
         
-        # Display live agent chat history
         for i, msg in enumerate(st.session_state.live_agent_history):
             if msg["role"] == "user":
                 with st.chat_message("user"):
@@ -100,17 +102,14 @@ def show_page():
                 with st.chat_message("assistant", avatar="🧑‍💼"):
                     st.markdown(f"**Sarah (Live Agent):** {msg['content']}")
         
-        # Live agent chat input
         live_agent_input = st.chat_input("Type your message to the live agent...", key="live_agent_input")
         
         if live_agent_input:
-            # Add user message to live agent history
             st.session_state.live_agent_history.append({
                 "role": "user", 
                 "content": live_agent_input
             })
             
-            # Simulate agent response (in a real implementation, this would connect to actual live agent system)
             agent_response = generate_live_agent_response(live_agent_input)
             st.session_state.live_agent_history.append({
                 "role": "agent", 
@@ -119,22 +118,18 @@ def show_page():
             
             st.rerun()
         
-        # Control buttons
-        col1, col2, col3 = st.columns([1, 1, 1])
-        with col1:
-            if st.button("🔄 Back to AI Assistant", type="primary", key="back-to-ai"):
-                # Add farewell message from agent
+        col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+        with col2:
+            if st.button("🔄 Back to Assistant", type="secondary", key="back-to-ai"):
                 farewell_message = {
                     "role": "agent", 
                     "content": "Thank you for contacting support! I'm ending our live chat session now. You'll be redirected back to the AI Assistant for any additional questions. Have a great day! 👋"
                 }
                 st.session_state.live_agent_history.append(farewell_message)
                 
-                # End the live agent session and return to AI assistant
                 st.session_state.live_agent_active = False
                 st.session_state.live_agent_history = []
                 
-                # Add session ended message to main chat history
                 session_end_msg = AssistantResponse(
                     messages=[{
                         "role": "assistant", 
@@ -146,14 +141,11 @@ def show_page():
                 st.rerun()
         
         with col3:
-            if st.button("❌ End Chat", type="secondary", key="end-chat"):
-                # Set flag to show feedback request
+            if st.button("End Chat", type="primary", key="end-chat"):
                 st.session_state.show_feedback = True
                 st.rerun()
         
-        # Show feedback section only when requested
         if st.session_state.get("show_feedback", False):
-            # Add a farewell message from the agent before ending
             farewell_message = {
                 "role": "agent", 
                 "content": "Thank you for contacting support today! I hope I was able to help resolve your concerns. If you need any further assistance, please don't hesitate to reach out again. Have a great day! 👋"
@@ -161,33 +153,27 @@ def show_page():
             if farewell_message not in st.session_state.live_agent_history:
                 st.session_state.live_agent_history.append(farewell_message)
             
-            # Show the farewell message immediately
             with st.chat_message("assistant", avatar="🧑‍💼"):
                 st.markdown(f"**Sarah (Live Agent):** {farewell_message['content']}")
             
-            # Show a comprehensive end chat message
             st.markdown("""
-            <div style="background: linear-gradient(90deg, #17a2b8, #007bff); color: white; padding: 1.5rem; border-radius: 10px; text-align: center; margin: 1rem 0; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                <h3>📞 Live Chat Session Ended</h3>
+            <div style="background: linear-gradient(#1BC0DA, #0B505B); color: white; padding: 1.5rem; border-radius: 10px; text-align: center; margin: 1rem 0; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <h3>📞 Chat Session Ended</h3>
                 <p><strong>Thank you for contacting our support team!</strong></p>
                 <p>Your conversation with Sarah has been concluded. We hope we were able to help resolve your issue.</p>
-                <hr style="border-color: rgba(255,255,255,0.3); margin: 1rem 0;">
-                <p><small>💡 <strong>Need more help?</strong> You can always start a new chat session or continue with our AI Assistant.</small></p>
-                <p><small>📧 <strong>Feedback:</strong> Please rate your experience to help us improve our service.</small></p>
+                <p><small><strong>Need more help?</strong> You can always start a new chat session or continue with our AI Assistant.</small></p>
+                <p><small><strong>Feedback:</strong> Please rate your experience to help us improve our service.</small></p>
             </div>
             """, unsafe_allow_html=True)
             
-            # Add feedback buttons that automatically end the chat
-            col_feedback1, col_feedback2, col_feedback3 = st.columns(3)
+            col_feedback0, col_feedback1, col_feedback2, col_feedback3, col_feedback4 = st.columns(5)
             with col_feedback1:
                 if st.button("😊 Excellent", key="feedback_excellent"):
                     st.balloons()
                     st.success("Thank you for your excellent feedback! Returning to AI Assistant...")
-                    # End chat session immediately after feedback
                     st.session_state.live_agent_active = False
                     st.session_state.live_agent_history = []
                     st.session_state.show_feedback = False
-                    # Add session ended message to main chat history
                     session_end_msg = AssistantResponse(
                         messages=[{
                             "role": "assistant", 
@@ -201,11 +187,9 @@ def show_page():
             with col_feedback2:
                 if st.button("😐 Average", key="feedback_average"):
                     st.info("Thank you for your feedback! Returning to AI Assistant...")
-                    # End chat session immediately after feedback
                     st.session_state.live_agent_active = False
                     st.session_state.live_agent_history = []
                     st.session_state.show_feedback = False
-                    # Add session ended message to main chat history
                     session_end_msg = AssistantResponse(
                         messages=[{
                             "role": "assistant", 
@@ -219,11 +203,9 @@ def show_page():
             with col_feedback3:
                 if st.button("😞 Poor", key="feedback_poor"):
                     st.warning("Thank you for your feedback! Returning to AI Assistant...")
-                    # End chat session immediately after feedback
                     st.session_state.live_agent_active = False
                     st.session_state.live_agent_history = []
                     st.session_state.show_feedback = False
-                    # Add session ended message to main chat history
                     session_end_msg = AssistantResponse(
                         messages=[{
                             "role": "assistant", 
@@ -244,10 +226,8 @@ def show_page():
         import random
         import time
         
-        # Simple pattern-based responses for demonstration
         message_lower = user_message.lower()
         
-        # Greeting responses
         if any(word in message_lower for word in ["hello", "hi", "hey", "good morning", "good afternoon"]):
             responses = [
                 "Hello! Thanks for contacting support. I'm Sarah and I'll be assisting you today. How can I help?",
@@ -256,7 +236,6 @@ def show_page():
             ]
             return random.choice(responses)
 
-        # Account-related responses
         elif any(word in message_lower for word in ["account", "login", "password", "username", "sign in"]):
             responses = [
                 "I can definitely help with account issues. For security purposes, I'll need to verify your identity. Can you please provide the email address associated with your account?",
@@ -265,9 +244,7 @@ def show_page():
             ]
             return random.choice(responses)
         
-        # Billing responses
         elif any(word in message_lower for word in ["billing", "payment", "charge", "invoice"]):
-            # Find which word was matched for more personalized response
             matched_word = next((word for word in ["billing", "payment", "charge", "invoice"] if word in message_lower), "billing")
             responses = [
                 f"I can assist with {matched_word} inquiries. Let me pull up your account information. Can you please confirm your account email address?",
@@ -276,7 +253,6 @@ def show_page():
             ]
             return random.choice(responses)
         
-            # Problem/issue responses
         elif any(word in message_lower for word in ["broken", "not working"]):
             responses = [
                 "I'm sorry to hear you're experiencing difficulties. Let me help you resolve this. Can you describe exactly what's happening when you encounter this issue?",
@@ -284,8 +260,7 @@ def show_page():
                 "Let me look into this for you right away. Can you walk me through the steps you took when this issue occurred?"
             ]
             return random.choice(responses)
-        
-        # Refund/cancellation responses  
+
         elif any(word in message_lower for word in ["refund", "cancel", "return", "money back"]):
             responses = [
                 "I'm so sorry that we didn't meet your expectations. Let me see what I can do to make this right for you, including a one-time goodwill credit if appropriate. Can you tell me more about your specific situation?",
@@ -294,7 +269,6 @@ def show_page():
             ]
             return random.choice(responses)
         
-        # Technical support
         elif any(word in message_lower for word in ["technical", "tech", "service"]):
             responses = [
                 "I can help with technical issues. Let me connect you with our tech support team or try to resolve this myself. What device and browser are you using?",
@@ -303,7 +277,6 @@ def show_page():
             ]
             return random.choice(responses)
         
-        # Gratitude responses
         elif any(word in message_lower for word in ["thank", "thanks", "appreciate","resolved"]):
             responses = [
                 "Happy to help! It was my pleasure assisting you today. When you're ready to wrap up, please use the 'End Chat' button to provide quick feedback - it really helps us improve our service. Please don't hesitate to reach out if you need anything else.",
@@ -311,7 +284,6 @@ def show_page():
             ]
             return random.choice(responses)
         
-        # Default response
         else:
             responses = [
                 "Thank you for contacting support. I'm here to help with whatever you need. Can you please provide more details about how I can assist you?",
@@ -330,15 +302,12 @@ def show_page():
         result_msg = first_delta
         msg_contents = []
         
-        # Accumulate tool calls properly
-        tool_call_map = {}  # Map call_id to tool call for accumulation
+        tool_call_map = {} 
         
         for delta in deltas:
-            # Handle content
             if delta.content:
                 msg_contents.append(delta.content)
                 
-            # Handle tool calls
             if hasattr(delta, 'tool_calls') and delta.tool_calls:
                 for tool_call in delta.tool_calls:
                     call_id = getattr(tool_call, 'id', None)
@@ -353,7 +322,6 @@ def show_page():
                     
                     if call_id:
                         if call_id not in tool_call_map:
-                            # New tool call
                             tool_call_map[call_id] = {
                                 "id": call_id,
                                 "type": tool_type,
@@ -363,19 +331,15 @@ def show_page():
                                 }
                             }
                         else:
-                            # Accumulate arguments for existing tool call
                             existing_args = tool_call_map[call_id]["function"]["arguments"]
                             tool_call_map[call_id]["function"]["arguments"] = existing_args + func_args
 
-                            # Update function name if provided
                             if func_name:
                                 tool_call_map[call_id]["function"]["name"] = func_name
 
-            # Handle tool call IDs (for tool response messages)
             if hasattr(delta, 'tool_call_id') and delta.tool_call_id:
                 result_msg = result_msg.model_copy(update={"tool_call_id": delta.tool_call_id})
         
-        # Convert tool call map back to list
         if tool_call_map:
             accumulated_tool_calls = list(tool_call_map.values())
             result_msg = result_msg.model_copy(update={"tool_calls": accumulated_tool_calls})
@@ -383,9 +347,6 @@ def show_page():
         result_msg = result_msg.model_copy(update={"content": "".join(msg_contents)})
         return result_msg
 
-
-
-    # --- Init state ---
     if "history" not in st.session_state:
         st.session_state.history = []
 
@@ -398,28 +359,25 @@ def show_page():
     if "show_feedback" not in st.session_state:
         st.session_state.show_feedback = False
 
-    st.title("AI Assistant")
-    # st.write(f"A basic chatbot using your own serving endpoint.")
-    col1, col2 = st.columns([3, 1])
+    st.title("Helpdesk AI Assistant")
+    col1, col2, col3 = st.columns([3, 6, 1])
     with col1:
         st.write(f"Endpoint name: `{SERVING_ENDPOINT}`")
-    with col2:
-        if st.button("🔄 New Chat", key="new-chat",type="secondary", help="Clear chat history and start fresh"):
+    with col3:
+        st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
+        if st.button("🔄 New Chat", key="new-chat", type="secondary", help="Clear chat history and start fresh"):
             st.session_state.history = []
             st.session_state.live_agent_active = False
             st.session_state.live_agent_history = []
             st.session_state.show_feedback = False
             st.success("✨ Chat cleared! Ready for a new conversation.")
             st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    # Show live agent interface if active
     if st.session_state.live_agent_active:
         show_live_agent_modal()
-        st.stop()  # Stop rendering the rest of the page when live agent is active
+        st.stop() 
 
-
-
-    # --- Render chat history ---
     for i, element in enumerate(st.session_state.history):
         element.render(i)
 
@@ -429,9 +387,8 @@ def show_page():
             return query_responses_endpoint_and_render(input_messages)
         elif task_type == "agent/v2/chat":
             return query_chat_agent_endpoint_and_render(input_messages)
-        else:  # chat/completions
+        else: 
             return query_chat_completions_endpoint_and_render(input_messages)
-
 
     def query_chat_completions_endpoint_and_render(input_messages):
         """Handle ChatCompletions streaming format."""
@@ -545,8 +502,6 @@ def show_page():
         with st.chat_message("assistant"):
             response_area = st.empty()
             response_area.markdown("_Thinking..._")
-            
-            # Track all the messages that need to be rendered in order
             all_messages = []
             request_id = None
 
@@ -556,21 +511,18 @@ def show_page():
                     messages=input_messages,
                     return_traces=ENDPOINT_SUPPORTS_FEEDBACK
                 ):
-                    # Extract databricks_output for request_id
                     if "databricks_output" in raw_event:
                         req_id = raw_event["databricks_output"].get("databricks_request_id")
                         if req_id:
                             request_id = req_id
                     
-                    # Parse using MLflow streaming event types, similar to ChatAgentChunk
                     if "type" in raw_event:
                         event = ResponsesAgentStreamEvent.model_validate(raw_event)
                         
                         if hasattr(event, 'item') and event.item:
-                            item = event.item  # This is a dict, not a parsed object
+                            item = event.item 
                             
                             if item.get("type") == "message":
-                                # Extract text content from message if present
                                 content_parts = item.get("content", [])
                                 for content_part in content_parts:
                                     if content_part.get("type") == "output_text":
@@ -582,12 +534,10 @@ def show_page():
                                             })
                                 
                             elif item.get("type") == "function_call":
-                                # Tool call
                                 call_id = item.get("call_id")
                                 function_name = item.get("name")
                                 arguments = item.get("arguments", "")
                                 
-                                # Add to messages for history
                                 all_messages.append({
                                     "role": "assistant",
                                     "content": "",
@@ -602,18 +552,15 @@ def show_page():
                                 })
                                 
                             elif item.get("type") == "function_call_output":
-                                # Tool call output/result
                                 call_id = item.get("call_id")
                                 output = item.get("output", "")
                                 
-                                # Add to messages for history
                                 all_messages.append({
                                     "role": "tool",
                                     "content": output,
                                     "tool_call_id": call_id
                                 })
                     
-                    # Update the display by rendering all accumulated messages
                     if all_messages:
                         with response_area.container():
                             for msg in all_messages:
@@ -634,19 +581,13 @@ def show_page():
                 return AssistantResponse(messages=messages, request_id=request_id)
 
 
-
-
-    # --- Chat input (must run BEFORE rendering messages) ---
     prompt = st.chat_input("Ask a question or type 'connect to live agent' for human support")
     if prompt:
-        # Check if user wants to connect to live agent
         if is_live_agent_request(prompt):
-            # Add user message to chat history
             user_msg = UserMessage(content=prompt)
             st.session_state.history.append(user_msg)
             user_msg.render(len(st.session_state.history) - 1)
             
-            # Add system message about connecting to live agent
             system_response = AssistantResponse(
                 messages=[{
                     "role": "assistant", 
@@ -657,24 +598,15 @@ def show_page():
             st.session_state.history.append(system_response)
             system_response.render(len(st.session_state.history) - 1)
             
-            # Activate live agent mode
             st.session_state.live_agent_active = True
             st.rerun()
         else:
-            # Normal AI assistant flow
-            # Get the task type for this endpoint
             task_type = _get_endpoint_task_type(SERVING_ENDPOINT)
-            
-            # Add user message to chat history
             user_msg = UserMessage(content=prompt)
             st.session_state.history.append(user_msg)
             user_msg.render(len(st.session_state.history) - 1)
 
-            # Convert history to standard chat message format for the query methods
             input_messages = [msg for elem in st.session_state.history for msg in elem.to_input_messages()]
             
-            # Handle the response using the appropriate handler
             assistant_response = query_endpoint_and_render(task_type, input_messages)
-            
-            # Add assistant response to history
             st.session_state.history.append(assistant_response)

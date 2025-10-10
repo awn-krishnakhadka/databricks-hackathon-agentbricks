@@ -1,4 +1,3 @@
-import logging
 import os
 import streamlit as st
 from model_serving_utils import (
@@ -11,8 +10,6 @@ from collections import OrderedDict
 from messages import UserMessage, AssistantResponse, render_message
 
 def show_page():
-
-    # Ensure environment variable is set correctly
     KBKA_SERVING_ENDPOINT = os.getenv('KBKA_SERVING_ENDPOINT')
     assert KBKA_SERVING_ENDPOINT, \
         ("Unable to determine serving endpoint to use for chatbot app. If developing locally, "
@@ -33,15 +30,12 @@ def show_page():
         result_msg = first_delta
         msg_contents = []
         
-        # Accumulate tool calls properly
-        tool_call_map = {}  # Map call_id to tool call for accumulation
+        tool_call_map = {}  
         
         for delta in deltas:
-            # Handle content
             if delta.content:
                 msg_contents.append(delta.content)
                 
-            # Handle tool calls
             if hasattr(delta, 'tool_calls') and delta.tool_calls:
                 for tool_call in delta.tool_calls:
                     call_id = getattr(tool_call, 'id', None)
@@ -56,7 +50,6 @@ def show_page():
                     
                     if call_id:
                         if call_id not in tool_call_map:
-                            # New tool call
                             tool_call_map[call_id] = {
                                 "id": call_id,
                                 "type": tool_type,
@@ -66,19 +59,15 @@ def show_page():
                                 }
                             }
                         else:
-                            # Accumulate arguments for existing tool call
                             existing_args = tool_call_map[call_id]["function"]["arguments"]
                             tool_call_map[call_id]["function"]["arguments"] = existing_args + func_args
 
-                            # Update function name if provided
                             if func_name:
                                 tool_call_map[call_id]["function"]["name"] = func_name
 
-            # Handle tool call IDs (for tool response messages)
             if hasattr(delta, 'tool_call_id') and delta.tool_call_id:
                 result_msg = result_msg.model_copy(update={"tool_call_id": delta.tool_call_id})
         
-        # Convert tool call map back to list
         if tool_call_map:
             accumulated_tool_calls = list(tool_call_map.values())
             result_msg = result_msg.model_copy(update={"tool_calls": accumulated_tool_calls})
@@ -86,19 +75,11 @@ def show_page():
         result_msg = result_msg.model_copy(update={"content": "".join(msg_contents)})
         return result_msg
 
-
-
-    # --- Init state ---
     if "kb_history" not in st.session_state:
         st.session_state.kb_history = []
 
-    st.title("Knowledge Base AI Assistant")
-    # st.write(f"A basic chatbot using your own serving endpoint.")
+    st.title("Assisted-Learning Portal")
     st.write(f"Endpoint name: `{KBKA_SERVING_ENDPOINT}`")
-
-
-
-    # --- Render chat history ---
     for i, element in enumerate(st.session_state.kb_history):
         element.render(i)
 
@@ -108,7 +89,7 @@ def show_page():
             return query_responses_endpoint_and_render(input_messages)
         elif task_type == "agent/v2/chat":
             return query_chat_agent_endpoint_and_render(input_messages)
-        else:  # chat/completions
+        else:
             return query_chat_completions_endpoint_and_render(input_messages)
 
 
@@ -225,7 +206,6 @@ def show_page():
             response_area = st.empty()
             response_area.markdown("_Thinking..._")
             
-            # Track all the messages that need to be rendered in order
             all_messages = []
             request_id = None
 
@@ -235,21 +215,18 @@ def show_page():
                     messages=input_messages,
                     return_traces=KBKA_ENDPOINT_SUPPORTS_FEEDBACK
                 ):
-                    # Extract databricks_output for request_id
                     if "databricks_output" in raw_event:
                         req_id = raw_event["databricks_output"].get("databricks_request_id")
                         if req_id:
                             request_id = req_id
                     
-                    # Parse using MLflow streaming event types, similar to ChatAgentChunk
                     if "type" in raw_event:
                         event = ResponsesAgentStreamEvent.model_validate(raw_event)
                         
                         if hasattr(event, 'item') and event.item:
-                            item = event.item  # This is a dict, not a parsed object
+                            item = event.item 
                             
                             if item.get("type") == "message":
-                                # Extract text content from message if present
                                 content_parts = item.get("content", [])
                                 for content_part in content_parts:
                                     if content_part.get("type") == "output_text":
@@ -261,12 +238,9 @@ def show_page():
                                             })
                                 
                             elif item.get("type") == "function_call":
-                                # Tool call
                                 call_id = item.get("call_id")
                                 function_name = item.get("name")
                                 arguments = item.get("arguments", "")
-                                
-                                # Add to messages for history
                                 all_messages.append({
                                     "role": "assistant",
                                     "content": "",
@@ -281,18 +255,14 @@ def show_page():
                                 })
                                 
                             elif item.get("type") == "function_call_output":
-                                # Tool call output/result
                                 call_id = item.get("call_id")
                                 output = item.get("output", "")
-                                
-                                # Add to messages for history
                                 all_messages.append({
                                     "role": "tool",
                                     "content": output,
                                     "tool_call_id": call_id
                                 })
                     
-                    # Update the display by rendering all accumulated messages
                     if all_messages:
                         with response_area.container():
                             for msg in all_messages:
@@ -312,25 +282,77 @@ def show_page():
                         render_message(message)
                 return AssistantResponse(messages=messages, request_id=request_id)
 
+    suggestive_topics = {
+        "Billing and Refunds": [
+            "Help with billing questions, overcharges, duplicate charges, and unauthorized charges.",
+            "Assistance with refunds for unused services, service cancellations, equipment returns, and billing errors.",
+            "Support for plan changes, including prorated credits or refunds.",
+            "Guidance on non-refundable items and special circumstances (e.g., contract termination, deceased customers).",
+        ],
+        "Technical Support": [
+            "Troubleshooting for service issues such as network outages, device problems, and connectivity.",
+            "Device setup assistance, both in-store and remotely (phone, video, app).",
+            "Help with home installation for internet and networking equipment.",
+            "Maintenance notifications and updates.",
+        ],
+        "Device and Equipment Returns": [
+            "Support for returning devices and accessories within specified timeframes.",
+            "Processing of refunds or replacements for defective equipment.",
+            "Information on restocking fees and required documentation.",
+        ],
+        "Service Interruption Credits": [
+            "Compensation for service outages or interruptions, calculated based on outage duration and plan cost.",
+            "Automatic credits for widespread outages; manual requests for individual issues.",
+            "Guidance on eligibility and how to request credits.",
+        ],
+        "Dispute Resolution": [
+            "Formal review and appeal processes for denied refund or credit requests.",
+            "Assistance with submitting dispute forms and escalation to resolution departments.",
+        ],
+        "Account Management and Customer Communications": [
+            "Account access and management via website, mobile app, phone, and retail locations.",
+            "Notifications about service status, outages, maintenance, and policy changes.",
+            "Customizable communication preferences.",
+        ],
+    }
 
+    if "selected_topic" not in st.session_state:
+        st.session_state.selected_topic = None
+    if "selected_question" not in st.session_state:
+        st.session_state.selected_question = None
 
+    st.markdown("##### 💡 Explore Knowledge Base Topics")
+    topic_cols = st.columns(len(suggestive_topics))
+    for i, topic in enumerate(suggestive_topics.keys()):
+        with topic_cols[i]:
+            if st.button(topic, use_container_width=True, key=f"topic_{i}"):
+                st.session_state.selected_topic = topic
+                st.session_state.selected_question = None  # Reset question when topic changes
 
-    # --- Chat input (must run BEFORE rendering messages) ---
-    prompt = st.chat_input("Ask a question about the knowledge base")
+    if st.session_state.selected_topic:
+        st.markdown(f"##### Suggested Questions for **{st.session_state.selected_topic}**")
+
+        question_cols = st.columns(2)
+        questions = suggestive_topics[st.session_state.selected_topic]
+
+        for idx, q in enumerate(questions):
+            with question_cols[idx % 2]:
+                if st.button(q, key=f"question_{idx}"):
+                    st.session_state.selected_question = q
+
+    prompt = None
+    if st.session_state.selected_question:
+        prompt = st.session_state.selected_question
+        st.info(f"💬 Selected question: {prompt}")
+    else:
+        prompt = st.chat_input("Ask a question about the knowledge base")
     if prompt:
-        # Get the task type for this endpoint
         task_type = _get_endpoint_task_type(KBKA_SERVING_ENDPOINT)
         
-        # Add user message to chat history
         user_msg = UserMessage(content=prompt)
         st.session_state.kb_history.append(user_msg)
         user_msg.render(len(st.session_state.kb_history) - 1)
 
-        # Convert history to standard chat message format for the query methods
         input_messages = [msg for elem in st.session_state.kb_history for msg in elem.to_input_messages()]
-
-        # Handle the response using the appropriate handler
         assistant_response = query_endpoint_and_render(task_type, input_messages)
-        
-        # Add assistant response to history
         st.session_state.kb_history.append(assistant_response)
