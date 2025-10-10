@@ -228,7 +228,7 @@ if selected_page == "Home":
             <div class="metric-title">Total Tickets</div>
             <div class="metric-value" style="color:#165CCC;">{total_tickets:,}</div>
             {delta_html(delta_tickets)}<br/>
-            <small style="color:gray;">vs last 1 month ({last_month_tickets:,} new)</small>
+            <small style="color:gray;">vs last 3 months ({last_month_tickets:,} new)</small>
         </div>
         """,
         unsafe_allow_html=True
@@ -240,7 +240,7 @@ if selected_page == "Home":
             <div class="metric-title">Resolved Tickets</div>
             <div class="metric-value" style="color:#0B8043;">{resolved:,}</div>
             {delta_html(delta_resolved)}<br/>
-            <small style="color:gray;">{last_month_resolved:,} resolved last month</small>
+            <small style="color:gray;">{last_month_resolved:,} resolved last 3 months</small>
         </div>
         """,
         unsafe_allow_html=True
@@ -252,7 +252,7 @@ if selected_page == "Home":
             <div class="metric-title">Active Agents</div>
             <div class="metric-value" style="color:#F9AB00;">{agents:,}</div>
             {delta_html(delta_agents)}<br/>
-            <small style="color:gray;">{last_month_agents:,} active last month</small>
+            <small style="color:gray;">{last_month_agents:,} active last 3 months</small>
         </div>
         """,
         unsafe_allow_html=True
