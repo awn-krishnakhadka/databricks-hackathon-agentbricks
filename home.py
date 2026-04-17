@@ -154,7 +154,8 @@ pages = {
     "Home": "🏠",
     "Helpdesk": "🤖",
     "Assisted Learning": "📚",
-    "Tickets Insights": "🧾"
+    "Tickets Insights": "🧾",
+    "Query Replay": "🔁"
 }
 
 selected_page = st.sidebar.radio(
@@ -291,3 +292,6 @@ elif selected_page == "Assisted Learning":
 elif selected_page == "Tickets Insights":
     from _pages import insights
     insights.show_page()
+elif selected_page == "Query Replay":
+    from _pages import replay
+    replay.show_page()
